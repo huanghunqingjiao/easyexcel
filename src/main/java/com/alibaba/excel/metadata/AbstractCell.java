@@ -1,10 +1,17 @@
 package com.alibaba.excel.metadata;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * cell
  *
  * @author Jiaju Zhuang
  **/
+@Getter
+@Setter
+@EqualsAndHashCode
 public class AbstractCell implements Cell {
     /**
      * Row index
@@ -14,20 +21,4 @@ public class AbstractCell implements Cell {
      * Column index
      */
     private Integer columnIndex;
-
-    public Integer getRowIndex() {
-        return rowIndex;
-    }
-
-    public void setRowIndex(Integer rowIndex) {
-        this.rowIndex = rowIndex;
-    }
-
-    public Integer getColumnIndex() {
-        return columnIndex;
-    }
-
-    public void setColumnIndex(Integer columnIndex) {
-        this.columnIndex = columnIndex;
-    }
 }

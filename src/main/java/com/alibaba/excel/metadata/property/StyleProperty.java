@@ -1,5 +1,13 @@
 package com.alibaba.excel.metadata.property;
 
+import com.alibaba.excel.annotation.write.style.ContentStyle;
+import com.alibaba.excel.annotation.write.style.HeadStyle;
+import com.alibaba.excel.metadata.data.DataFormatData;
+import com.alibaba.excel.write.metadata.style.WriteFont;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.BuiltinFormats;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -8,20 +16,19 @@ import org.apache.poi.ss.usermodel.IgnoredErrorType;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 
-import com.alibaba.excel.annotation.write.style.ContentStyle;
-import com.alibaba.excel.annotation.write.style.HeadStyle;
-import com.alibaba.excel.write.metadata.style.WriteFont;
-
 /**
  * Configuration from annotations
  *
  * @author Jiaju Zhuang
  */
+@Getter
+@Setter
+@EqualsAndHashCode
 public class StyleProperty {
     /**
      * Set the data format (must be a valid format). Built in formats are defined at {@link BuiltinFormats}.
      */
-    private Short dataFormat;
+    private DataFormatData dataFormatData;
     /**
      * Set the font for this style
      */
@@ -48,7 +55,6 @@ public class StyleProperty {
     /**
      * Set whether the text should be wrapped. Setting this flag to <code>true</code> make all content visible within a
      * cell by displaying it on multiple lines
-     *
      */
     private Boolean wrapped;
     /**
@@ -96,7 +102,6 @@ public class StyleProperty {
      * Set the color to use for the right border
      *
      * @see IndexedColors
-     *
      */
     private Short rightBorderColor;
 
@@ -104,14 +109,12 @@ public class StyleProperty {
      * Set the color to use for the top border
      *
      * @see IndexedColors
-     *
      */
     private Short topBorderColor;
     /**
      * Set the color to use for the bottom border
      *
      * @see IndexedColors
-     *
      */
     private Short bottomBorderColor;
     /**
@@ -125,7 +128,6 @@ public class StyleProperty {
      * Set the background fill color.
      *
      * @see IndexedColors
-     *
      */
     private Short fillBackgroundColor;
 
@@ -133,7 +135,6 @@ public class StyleProperty {
      * Set the foreground fill color <i>Note: Ensure Foreground color is set prior to background color.</i>
      *
      * @see IndexedColors
-     *
      */
     private Short fillForegroundColor;
     /**
@@ -146,27 +147,47 @@ public class StyleProperty {
             return null;
         }
         StyleProperty styleProperty = new StyleProperty();
-        styleProperty.setDataFormat(headStyle.dataFormat());
-        styleProperty.setHidden(headStyle.hidden());
-        styleProperty.setLocked(headStyle.locked());
-        styleProperty.setQuotePrefix(headStyle.quotePrefix());
-        styleProperty.setHorizontalAlignment(headStyle.horizontalAlignment());
-        styleProperty.setWrapped(headStyle.wrapped());
-        styleProperty.setVerticalAlignment(headStyle.verticalAlignment());
-        styleProperty.setRotation(headStyle.rotation());
-        styleProperty.setIndent(headStyle.indent());
-        styleProperty.setBorderLeft(headStyle.borderLeft());
-        styleProperty.setBorderRight(headStyle.borderRight());
-        styleProperty.setBorderTop(headStyle.borderTop());
-        styleProperty.setBorderBottom(headStyle.borderBottom());
-        styleProperty.setLeftBorderColor(headStyle.leftBorderColor());
-        styleProperty.setRightBorderColor(headStyle.rightBorderColor());
-        styleProperty.setTopBorderColor(headStyle.topBorderColor());
-        styleProperty.setBottomBorderColor(headStyle.bottomBorderColor());
-        styleProperty.setFillPatternType(headStyle.fillPatternType());
-        styleProperty.setFillBackgroundColor(headStyle.fillBackgroundColor());
-        styleProperty.setFillForegroundColor(headStyle.fillForegroundColor());
-        styleProperty.setShrinkToFit(headStyle.shrinkToFit());
+        if (headStyle.dataFormat() >= 0) {
+            DataFormatData dataFormatData = new DataFormatData();
+            dataFormatData.setIndex(headStyle.dataFormat());
+            styleProperty.setDataFormatData(dataFormatData);
+        }
+        styleProperty.setHidden(headStyle.hidden().getBooleanValue());
+        styleProperty.setLocked(headStyle.locked().getBooleanValue());
+        styleProperty.setQuotePrefix(headStyle.quotePrefix().getBooleanValue());
+        styleProperty.setHorizontalAlignment(headStyle.horizontalAlignment().getPoiHorizontalAlignment());
+        styleProperty.setWrapped(headStyle.wrapped().getBooleanValue());
+        styleProperty.setVerticalAlignment(headStyle.verticalAlignment().getPoiVerticalAlignmentEnum());
+        if (headStyle.rotation() >= 0) {
+            styleProperty.setRotation(headStyle.rotation());
+        }
+        if (headStyle.indent() >= 0) {
+            styleProperty.setIndent(headStyle.indent());
+        }
+        styleProperty.setBorderLeft(headStyle.borderLeft().getPoiBorderStyle());
+        styleProperty.setBorderRight(headStyle.borderRight().getPoiBorderStyle());
+        styleProperty.setBorderTop(headStyle.borderTop().getPoiBorderStyle());
+        styleProperty.setBorderBottom(headStyle.borderBottom().getPoiBorderStyle());
+        if (headStyle.leftBorderColor() >= 0) {
+            styleProperty.setLeftBorderColor(headStyle.leftBorderColor());
+        }
+        if (headStyle.rightBorderColor() >= 0) {
+            styleProperty.setRightBorderColor(headStyle.rightBorderColor());
+        }
+        if (headStyle.topBorderColor() >= 0) {
+            styleProperty.setTopBorderColor(headStyle.topBorderColor());
+        }
+        if (headStyle.bottomBorderColor() >= 0) {
+            styleProperty.setBottomBorderColor(headStyle.bottomBorderColor());
+        }
+        styleProperty.setFillPatternType(headStyle.fillPatternType().getPoiFillPatternType());
+        if (headStyle.fillBackgroundColor() >= 0) {
+            styleProperty.setFillBackgroundColor(headStyle.fillBackgroundColor());
+        }
+        if (headStyle.fillForegroundColor() >= 0) {
+            styleProperty.setFillForegroundColor(headStyle.fillForegroundColor());
+        }
+        styleProperty.setShrinkToFit(headStyle.shrinkToFit().getBooleanValue());
         return styleProperty;
     }
 
@@ -175,203 +196,47 @@ public class StyleProperty {
             return null;
         }
         StyleProperty styleProperty = new StyleProperty();
-        styleProperty.setDataFormat(contentStyle.dataFormat());
-        styleProperty.setHidden(contentStyle.hidden());
-        styleProperty.setLocked(contentStyle.locked());
-        styleProperty.setQuotePrefix(contentStyle.quotePrefix());
-        styleProperty.setHorizontalAlignment(contentStyle.horizontalAlignment());
-        styleProperty.setWrapped(contentStyle.wrapped());
-        styleProperty.setVerticalAlignment(contentStyle.verticalAlignment());
-        styleProperty.setRotation(contentStyle.rotation());
-        styleProperty.setIndent(contentStyle.indent());
-        styleProperty.setBorderLeft(contentStyle.borderLeft());
-        styleProperty.setBorderRight(contentStyle.borderRight());
-        styleProperty.setBorderTop(contentStyle.borderTop());
-        styleProperty.setBorderBottom(contentStyle.borderBottom());
-        styleProperty.setLeftBorderColor(contentStyle.leftBorderColor());
-        styleProperty.setRightBorderColor(contentStyle.rightBorderColor());
-        styleProperty.setTopBorderColor(contentStyle.topBorderColor());
-        styleProperty.setBottomBorderColor(contentStyle.bottomBorderColor());
-        styleProperty.setFillPatternType(contentStyle.fillPatternType());
-        styleProperty.setFillBackgroundColor(contentStyle.fillBackgroundColor());
-        styleProperty.setFillForegroundColor(contentStyle.fillForegroundColor());
-        styleProperty.setShrinkToFit(contentStyle.shrinkToFit());
+        if (contentStyle.dataFormat() >= 0) {
+            DataFormatData dataFormatData = new DataFormatData();
+            dataFormatData.setIndex(contentStyle.dataFormat());
+            styleProperty.setDataFormatData(dataFormatData);
+        }
+        styleProperty.setHidden(contentStyle.hidden().getBooleanValue());
+        styleProperty.setLocked(contentStyle.locked().getBooleanValue());
+        styleProperty.setQuotePrefix(contentStyle.quotePrefix().getBooleanValue());
+        styleProperty.setHorizontalAlignment(contentStyle.horizontalAlignment().getPoiHorizontalAlignment());
+        styleProperty.setWrapped(contentStyle.wrapped().getBooleanValue());
+        styleProperty.setVerticalAlignment(contentStyle.verticalAlignment().getPoiVerticalAlignmentEnum());
+        if (contentStyle.rotation() >= 0) {
+            styleProperty.setRotation(contentStyle.rotation());
+        }
+        if (contentStyle.indent() >= 0) {
+            styleProperty.setIndent(contentStyle.indent());
+        }
+        styleProperty.setBorderLeft(contentStyle.borderLeft().getPoiBorderStyle());
+        styleProperty.setBorderRight(contentStyle.borderRight().getPoiBorderStyle());
+        styleProperty.setBorderTop(contentStyle.borderTop().getPoiBorderStyle());
+        styleProperty.setBorderBottom(contentStyle.borderBottom().getPoiBorderStyle());
+        if (contentStyle.leftBorderColor() >= 0) {
+            styleProperty.setLeftBorderColor(contentStyle.leftBorderColor());
+        }
+        if (contentStyle.rightBorderColor() >= 0) {
+            styleProperty.setRightBorderColor(contentStyle.rightBorderColor());
+        }
+        if (contentStyle.topBorderColor() >= 0) {
+            styleProperty.setTopBorderColor(contentStyle.topBorderColor());
+        }
+        if (contentStyle.bottomBorderColor() >= 0) {
+            styleProperty.setBottomBorderColor(contentStyle.bottomBorderColor());
+        }
+        styleProperty.setFillPatternType(contentStyle.fillPatternType().getPoiFillPatternType());
+        if (contentStyle.fillBackgroundColor() >= 0) {
+            styleProperty.setFillBackgroundColor(contentStyle.fillBackgroundColor());
+        }
+        if (contentStyle.fillForegroundColor() >= 0) {
+            styleProperty.setFillForegroundColor(contentStyle.fillForegroundColor());
+        }
+        styleProperty.setShrinkToFit(contentStyle.shrinkToFit().getBooleanValue());
         return styleProperty;
-    }
-
-    public Short getDataFormat() {
-        return dataFormat;
-    }
-
-    public void setDataFormat(Short dataFormat) {
-        this.dataFormat = dataFormat;
-    }
-
-    public WriteFont getWriteFont() {
-        return writeFont;
-    }
-
-    public void setWriteFont(WriteFont writeFont) {
-        this.writeFont = writeFont;
-    }
-
-    public Boolean getHidden() {
-        return hidden;
-    }
-
-    public void setHidden(Boolean hidden) {
-        this.hidden = hidden;
-    }
-
-    public Boolean getLocked() {
-        return locked;
-    }
-
-    public void setLocked(Boolean locked) {
-        this.locked = locked;
-    }
-
-    public Boolean getQuotePrefix() {
-        return quotePrefix;
-    }
-
-    public void setQuotePrefix(Boolean quotePrefix) {
-        this.quotePrefix = quotePrefix;
-    }
-
-    public HorizontalAlignment getHorizontalAlignment() {
-        return horizontalAlignment;
-    }
-
-    public void setHorizontalAlignment(HorizontalAlignment horizontalAlignment) {
-        this.horizontalAlignment = horizontalAlignment;
-    }
-
-    public Boolean getWrapped() {
-        return wrapped;
-    }
-
-    public void setWrapped(Boolean wrapped) {
-        this.wrapped = wrapped;
-    }
-
-    public VerticalAlignment getVerticalAlignment() {
-        return verticalAlignment;
-    }
-
-    public void setVerticalAlignment(VerticalAlignment verticalAlignment) {
-        this.verticalAlignment = verticalAlignment;
-    }
-
-    public Short getRotation() {
-        return rotation;
-    }
-
-    public void setRotation(Short rotation) {
-        this.rotation = rotation;
-    }
-
-    public Short getIndent() {
-        return indent;
-    }
-
-    public void setIndent(Short indent) {
-        this.indent = indent;
-    }
-
-    public BorderStyle getBorderLeft() {
-        return borderLeft;
-    }
-
-    public void setBorderLeft(BorderStyle borderLeft) {
-        this.borderLeft = borderLeft;
-    }
-
-    public BorderStyle getBorderRight() {
-        return borderRight;
-    }
-
-    public void setBorderRight(BorderStyle borderRight) {
-        this.borderRight = borderRight;
-    }
-
-    public BorderStyle getBorderTop() {
-        return borderTop;
-    }
-
-    public void setBorderTop(BorderStyle borderTop) {
-        this.borderTop = borderTop;
-    }
-
-    public BorderStyle getBorderBottom() {
-        return borderBottom;
-    }
-
-    public void setBorderBottom(BorderStyle borderBottom) {
-        this.borderBottom = borderBottom;
-    }
-
-    public Short getLeftBorderColor() {
-        return leftBorderColor;
-    }
-
-    public void setLeftBorderColor(Short leftBorderColor) {
-        this.leftBorderColor = leftBorderColor;
-    }
-
-    public Short getRightBorderColor() {
-        return rightBorderColor;
-    }
-
-    public void setRightBorderColor(Short rightBorderColor) {
-        this.rightBorderColor = rightBorderColor;
-    }
-
-    public Short getTopBorderColor() {
-        return topBorderColor;
-    }
-
-    public void setTopBorderColor(Short topBorderColor) {
-        this.topBorderColor = topBorderColor;
-    }
-
-    public Short getBottomBorderColor() {
-        return bottomBorderColor;
-    }
-
-    public void setBottomBorderColor(Short bottomBorderColor) {
-        this.bottomBorderColor = bottomBorderColor;
-    }
-
-    public FillPatternType getFillPatternType() {
-        return fillPatternType;
-    }
-
-    public void setFillPatternType(FillPatternType fillPatternType) {
-        this.fillPatternType = fillPatternType;
-    }
-
-    public Short getFillBackgroundColor() {
-        return fillBackgroundColor;
-    }
-
-    public void setFillBackgroundColor(Short fillBackgroundColor) {
-        this.fillBackgroundColor = fillBackgroundColor;
-    }
-
-    public Short getFillForegroundColor() {
-        return fillForegroundColor;
-    }
-
-    public void setFillForegroundColor(Short fillForegroundColor) {
-        this.fillForegroundColor = fillForegroundColor;
-    }
-
-    public Boolean getShrinkToFit() {
-        return shrinkToFit;
-    }
-
-    public void setShrinkToFit(Boolean shrinkToFit) {
-        this.shrinkToFit = shrinkToFit;
     }
 }

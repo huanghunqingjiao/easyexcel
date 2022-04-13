@@ -2,11 +2,24 @@ package com.alibaba.excel.write.metadata.fill;
 
 import com.alibaba.excel.enums.WriteDirectionEnum;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 /**
  * Fill config
  *
  * @author Jiaju Zhuang
  **/
+@Getter
+@Setter
+@EqualsAndHashCode
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class FillConfig {
     private WriteDirectionEnum direction;
     /**
@@ -16,23 +29,15 @@ public class FillConfig {
      * say the whole file will be stored in memory.
      */
     private Boolean forceNewRow;
+
+    /**
+     * Automatically inherit style
+     *
+     * default true.
+     */
+    private Boolean autoStyle;
+
     private boolean hasInit;
-
-    public WriteDirectionEnum getDirection() {
-        return direction;
-    }
-
-    public void setDirection(WriteDirectionEnum direction) {
-        this.direction = direction;
-    }
-
-    public Boolean getForceNewRow() {
-        return forceNewRow;
-    }
-
-    public void setForceNewRow(Boolean forceNewRow) {
-        this.forceNewRow = forceNewRow;
-    }
 
     public void init() {
         if (hasInit) {
@@ -44,40 +49,9 @@ public class FillConfig {
         if (forceNewRow == null) {
             forceNewRow = Boolean.FALSE;
         }
+        if (autoStyle == null) {
+            autoStyle = Boolean.TRUE;
+        }
         hasInit = true;
-    }
-
-    public static FillConfigBuilder builder() {
-        return new FillConfigBuilder();
-    }
-
-    public static class FillConfigBuilder {
-        private FillConfig fillConfig;
-
-        FillConfigBuilder() {
-            this.fillConfig = new FillConfig();
-        }
-
-        public FillConfigBuilder direction(WriteDirectionEnum direction) {
-            fillConfig.setDirection(direction);
-            return this;
-        }
-
-        public FillConfigBuilder forceNewRow(Boolean forceNewRow) {
-            fillConfig.setForceNewRow(forceNewRow);
-            return this;
-        }
-
-        public FillConfig build() {
-            return build(true);
-        }
-
-        public FillConfig build(boolean autoInit) {
-            if (autoInit) {
-                fillConfig.init();
-            }
-            return fillConfig;
-        }
-
     }
 }

@@ -2,18 +2,21 @@ package com.alibaba.easyexcel.test.temp.simple;
 
 import java.util.Date;
 
-import org.apache.poi.ss.usermodel.FillPatternType;
-
 import com.alibaba.excel.annotation.ExcelIgnore;
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.excel.annotation.write.style.HeadStyle;
+import com.alibaba.excel.enums.poi.FillPatternTypeEnum;
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode
 public class DemoData2 {
     @ExcelProperty("字符串标题")
-    @HeadStyle(fillPatternType = FillPatternType.SOLID_FOREGROUND, fillForegroundColor = 42)
+    @HeadStyle(fillPatternType = FillPatternTypeEnum.SOLID_FOREGROUND, fillForegroundColor = 42)
     private String string;
     @ExcelProperty("日期标题")
     private Date date;

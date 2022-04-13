@@ -2,7 +2,6 @@ package com.alibaba.easyexcel.test.temp;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.easyexcel.test.demo.read.DemoDataListener;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
-import com.alibaba.excel.metadata.CellData;
 import com.alibaba.fastjson.JSON;
 
 /**
@@ -21,7 +19,7 @@ import com.alibaba.fastjson.JSON;
 public class LockDataListener extends AnalysisEventListener<LockData> {
     private static final Logger LOGGER = LoggerFactory.getLogger(DemoDataListener.class);
     /**
-     * 每隔5条存储数据库，实际使用中可以3000条，然后清理list ，方便内存回收
+     * 每隔5条存储数据库，实际使用中可以100条，然后清理list ，方便内存回收
      */
     private static final int BATCH_COUNT = 5;
     List<LockData> list = new ArrayList<LockData>();

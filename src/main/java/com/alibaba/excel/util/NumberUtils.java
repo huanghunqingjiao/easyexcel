@@ -5,7 +5,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 
-import com.alibaba.excel.metadata.CellData;
+import com.alibaba.excel.metadata.data.WriteCellData;
 import com.alibaba.excel.metadata.property.ExcelContentProperty;
 
 /**
@@ -46,8 +46,24 @@ public class NumberUtils {
      * @param contentProperty
      * @return
      */
-    public static CellData formatToCellData(Number num, ExcelContentProperty contentProperty) {
-        return new CellData(format(num, contentProperty));
+    public static WriteCellData<?> formatToCellDataString(Number num, ExcelContentProperty contentProperty) {
+        return new WriteCellData<>(format(num, contentProperty));
+    }
+
+    /**
+     * format
+     *
+     * @param num
+     * @param contentProperty
+     * @return
+     */
+    public static WriteCellData<?> formatToCellData(Number num, ExcelContentProperty contentProperty) {
+        WriteCellData<?> cellData = new WriteCellData<>(new BigDecimal(num.toString()));
+        if (contentProperty != null && contentProperty.getNumberFormatProperty() != null
+            && StringUtils.isNotBlank(contentProperty.getNumberFormatProperty().getFormat())) {
+            WorkBookUtil.fillDataFormat(cellData, contentProperty.getNumberFormatProperty().getFormat(), null);
+        }
+        return cellData;
     }
 
     /**
@@ -118,7 +134,7 @@ public class NumberUtils {
         if (!hasFormat(contentProperty)) {
             return new BigDecimal(string);
         }
-        return BigDecimal.valueOf(parse(string, contentProperty).doubleValue());
+        return new BigDecimal(parse(string, contentProperty).toString());
     }
 
     /**
@@ -170,4 +186,5 @@ public class NumberUtils {
         decimalFormat.setParseBigDecimal(true);
         return decimalFormat.parse(string);
     }
+
 }

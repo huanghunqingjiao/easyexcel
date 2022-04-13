@@ -1,18 +1,27 @@
 package com.alibaba.easyexcel.test.core.converter;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.Date;
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * @author Jiaju Zhuang
  */
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode
 public class ReadAllConverterData {
     private BigDecimal bigDecimalBoolean;
     private BigDecimal bigDecimalNumber;
     private BigDecimal bigDecimalString;
+    private BigInteger bigIntegerBoolean;
+    private BigInteger bigIntegerNumber;
+    private BigInteger bigIntegerString;
     private Boolean booleanBoolean;
     private Boolean booleanNumber;
     private Boolean booleanString;
@@ -21,6 +30,8 @@ public class ReadAllConverterData {
     private Byte byteString;
     private Date dateNumber;
     private Date dateString;
+    private LocalDateTime localDateTimeNumber;
+    private LocalDateTime localDateTimeString;
     private Double doubleBoolean;
     private Double doubleNumber;
     private Double doubleString;

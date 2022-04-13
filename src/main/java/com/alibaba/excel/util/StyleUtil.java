@@ -1,81 +1,62 @@
 package com.alibaba.excel.util;
 
-import org.apache.poi.ss.usermodel.BorderStyle;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.ss.usermodel.VerticalAlignment;
-import org.apache.poi.ss.usermodel.Workbook;
+import java.util.Optional;
 
+import com.alibaba.excel.constant.BuiltinFormats;
+import com.alibaba.excel.metadata.data.DataFormatData;
+import com.alibaba.excel.metadata.data.HyperlinkData;
+import com.alibaba.excel.metadata.data.RichTextStringData;
+import com.alibaba.excel.metadata.data.RichTextStringData.IntervalFont;
+import com.alibaba.excel.support.ExcelTypeEnum;
+import com.alibaba.excel.write.metadata.holder.WriteWorkbookHolder;
 import com.alibaba.excel.write.metadata.style.WriteCellStyle;
 import com.alibaba.excel.write.metadata.style.WriteFont;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.poi.common.usermodel.HyperlinkType;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFRichTextString;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.DataFormat;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.RichTextString;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.util.Units;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 
 /**
  * @author jipengfei
  */
+@Slf4j
 public class StyleUtil {
 
     private StyleUtil() {}
 
     /**
-     * @param workbook
-     * @return
-     */
-    public static CellStyle buildDefaultCellStyle(Workbook workbook) {
-        CellStyle newCellStyle = workbook.createCellStyle();
-        newCellStyle.setWrapText(true);
-        newCellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-        newCellStyle.setAlignment(HorizontalAlignment.CENTER);
-        newCellStyle.setLocked(true);
-        newCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        newCellStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-        newCellStyle.setBorderTop(BorderStyle.THIN);
-        newCellStyle.setBorderBottom(BorderStyle.THIN);
-        newCellStyle.setBorderLeft(BorderStyle.THIN);
-        newCellStyle.setBorderRight(BorderStyle.THIN);
-        return newCellStyle;
-    }
-
-    /**
-     * Build head cell style
+     * Build  cell style
      *
      * @param workbook
+     * @param originCellStyle
      * @param writeCellStyle
      * @return
      */
-    public static CellStyle buildHeadCellStyle(Workbook workbook, WriteCellStyle writeCellStyle) {
-        CellStyle cellStyle = buildDefaultCellStyle(workbook);
-        if (writeCellStyle == null) {
-            return cellStyle;
-        }
-        buildCellStyle(workbook, cellStyle, writeCellStyle, true);
-        return cellStyle;
-    }
-
-    /**
-     * Build content cell style
-     *
-     * @param workbook
-     * @param writeCellStyle
-     * @return
-     */
-    public static CellStyle buildContentCellStyle(Workbook workbook, WriteCellStyle writeCellStyle) {
+    public static CellStyle buildCellStyle(Workbook workbook, CellStyle originCellStyle,
+        WriteCellStyle writeCellStyle) {
         CellStyle cellStyle = workbook.createCellStyle();
+        if (originCellStyle != null) {
+            cellStyle.cloneStyleFrom(originCellStyle);
+        }
         if (writeCellStyle == null) {
             return cellStyle;
         }
-        buildCellStyle(workbook, cellStyle, writeCellStyle, false);
+        buildCellStyle(cellStyle, writeCellStyle);
         return cellStyle;
     }
 
-    private static void buildCellStyle(Workbook workbook, CellStyle cellStyle, WriteCellStyle writeCellStyle,
-        boolean isHead) {
-        buildFont(workbook, cellStyle, writeCellStyle.getWriteFont(), isHead);
-        if (writeCellStyle.getDataFormat() != null) {
-            cellStyle.setDataFormat(writeCellStyle.getDataFormat());
-        }
+    private static void buildCellStyle(CellStyle cellStyle, WriteCellStyle writeCellStyle) {
         if (writeCellStyle.getHidden() != null) {
             cellStyle.setHidden(writeCellStyle.getHidden());
         }
@@ -138,21 +119,33 @@ public class StyleUtil {
         }
     }
 
-    private static void buildFont(Workbook workbook, CellStyle cellStyle, WriteFont writeFont, boolean isHead) {
-        Font font = null;
-        if (isHead) {
-            font = workbook.createFont();
-            font.setFontName("宋体");
-            font.setFontHeightInPoints((short)14);
-            font.setBold(true);
-            cellStyle.setFont(font);
+    public static short buildDataFormat(Workbook workbook, DataFormatData dataFormatData) {
+        if (dataFormatData == null) {
+            return BuiltinFormats.GENERAL;
         }
-        if (writeFont == null) {
-            return;
+        if (dataFormatData.getIndex() != null && dataFormatData.getIndex() >= 0) {
+            return dataFormatData.getIndex();
         }
-        if (!isHead) {
-            font = workbook.createFont();
-            cellStyle.setFont(font);
+        if (StringUtils.isNotBlank(dataFormatData.getFormat())) {
+            if (log.isDebugEnabled()) {
+                log.info("create new data fromat:{}", dataFormatData);
+            }
+            DataFormat dataFormatCreate = workbook.createDataFormat();
+            return dataFormatCreate.getFormat(dataFormatData.getFormat());
+        }
+        return BuiltinFormats.GENERAL;
+    }
+
+    public static Font buildFont(Workbook workbook, Font originFont, WriteFont writeFont) {
+        if (log.isDebugEnabled()) {
+            log.info("create new font:{},{}", writeFont, originFont);
+        }
+        if (writeFont == null && originFont == null) {
+            return null;
+        }
+        Font font = createFont(workbook, originFont, writeFont);
+        if (writeFont == null || font == null) {
+            return font;
         }
         if (writeFont.getFontName() != null) {
             font.setFontName(writeFont.getFontName());
@@ -181,6 +174,99 @@ public class StyleUtil {
         if (writeFont.getBold() != null) {
             font.setBold(writeFont.getBold());
         }
+        return font;
+    }
+
+    private static Font createFont(Workbook workbook, Font originFont, WriteFont writeFont) {
+        Font font = workbook.createFont();
+        if (originFont == null) {
+            return font;
+        }
+        if (originFont instanceof XSSFFont) {
+            XSSFFont xssfFont = (XSSFFont)font;
+            XSSFFont xssfOriginFont = ((XSSFFont)originFont);
+            xssfFont.setFontName(xssfOriginFont.getFontName());
+            xssfFont.setFontHeightInPoints(xssfOriginFont.getFontHeightInPoints());
+            xssfFont.setItalic(xssfOriginFont.getItalic());
+            xssfFont.setStrikeout(xssfOriginFont.getStrikeout());
+            // Colors cannot be overwritten
+            if (writeFont == null || writeFont.getColor() == null) {
+                xssfFont.setColor(Optional.of(xssfOriginFont)
+                    .map(XSSFFont::getXSSFColor)
+                    .map(XSSFColor::getRGB)
+                    .map(rgb -> new XSSFColor(rgb, null))
+                    .orElse(null));
+            }
+            xssfFont.setTypeOffset(xssfOriginFont.getTypeOffset());
+            xssfFont.setUnderline(xssfOriginFont.getUnderline());
+            xssfFont.setCharSet(xssfOriginFont.getCharSet());
+            xssfFont.setBold(xssfOriginFont.getBold());
+            return xssfFont;
+        } else if (originFont instanceof HSSFFont) {
+            HSSFFont hssfFont = (HSSFFont)font;
+            HSSFFont hssfOriginFont = (HSSFFont)originFont;
+            hssfFont.setFontName(hssfOriginFont.getFontName());
+            hssfFont.setFontHeightInPoints(hssfOriginFont.getFontHeightInPoints());
+            hssfFont.setItalic(hssfOriginFont.getItalic());
+            hssfFont.setStrikeout(hssfOriginFont.getStrikeout());
+            hssfFont.setColor(hssfOriginFont.getColor());
+            hssfFont.setTypeOffset(hssfOriginFont.getTypeOffset());
+            hssfFont.setUnderline(hssfOriginFont.getUnderline());
+            hssfFont.setCharSet(hssfOriginFont.getCharSet());
+            hssfFont.setBold(hssfOriginFont.getBold());
+            return hssfFont;
+        }
+        return font;
+    }
+
+    public static RichTextString buildRichTextString(WriteWorkbookHolder writeWorkbookHolder,
+        RichTextStringData richTextStringData) {
+        if (richTextStringData == null) {
+            return null;
+        }
+        RichTextString richTextString;
+        if (writeWorkbookHolder.getExcelType() == ExcelTypeEnum.XLSX) {
+            richTextString = new XSSFRichTextString(richTextStringData.getTextString());
+        } else {
+            richTextString = new HSSFRichTextString(richTextStringData.getTextString());
+        }
+        if (richTextStringData.getWriteFont() != null) {
+            richTextString.applyFont(writeWorkbookHolder.createFont(richTextStringData.getWriteFont(), null, true));
+        }
+        if (CollectionUtils.isNotEmpty(richTextStringData.getIntervalFontList())) {
+            for (IntervalFont intervalFont : richTextStringData.getIntervalFontList()) {
+                richTextString.applyFont(intervalFont.getStartIndex(), intervalFont.getEndIndex(),
+                    writeWorkbookHolder.createFont(intervalFont.getWriteFont(), null, true));
+            }
+        }
+        return richTextString;
+    }
+
+    public static HyperlinkType getHyperlinkType(HyperlinkData.HyperlinkType hyperlinkType) {
+        if (hyperlinkType == null) {
+            return HyperlinkType.NONE;
+        }
+        return hyperlinkType.getValue();
+    }
+
+    public static int getCoordinate(Integer coordinate) {
+        if (coordinate == null) {
+            return 0;
+        }
+        return Units.toEMU(coordinate);
+    }
+
+    public static int getCellCoordinate(Integer currentCoordinate, Integer absoluteCoordinate,
+        Integer relativeCoordinate) {
+        if (absoluteCoordinate != null && absoluteCoordinate > 0) {
+            return absoluteCoordinate;
+        }
+        if (relativeCoordinate != null) {
+            return currentCoordinate + relativeCoordinate;
+        }
+        return currentCoordinate;
     }
 
 }
+
+

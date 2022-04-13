@@ -9,47 +9,53 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.IndexedColors;
-
+import com.alibaba.excel.constant.OrderConstant;
 import com.alibaba.excel.converters.Converter;
 import com.alibaba.excel.converters.ConverterKeyBuild;
 import com.alibaba.excel.converters.DefaultConverterLoader;
 import com.alibaba.excel.enums.HeadKindEnum;
 import com.alibaba.excel.event.NotRepeatExecutor;
-import com.alibaba.excel.event.Order;
 import com.alibaba.excel.metadata.AbstractHolder;
-import com.alibaba.excel.metadata.Font;
 import com.alibaba.excel.metadata.Head;
-import com.alibaba.excel.metadata.TableStyle;
+import com.alibaba.excel.metadata.property.ExcelContentProperty;
 import com.alibaba.excel.metadata.property.LoopMergeProperty;
 import com.alibaba.excel.metadata.property.OnceAbsoluteMergeProperty;
 import com.alibaba.excel.metadata.property.RowHeightProperty;
-import com.alibaba.excel.util.CollectionUtils;
 import com.alibaba.excel.write.handler.CellWriteHandler;
 import com.alibaba.excel.write.handler.DefaultWriteHandlerLoader;
 import com.alibaba.excel.write.handler.RowWriteHandler;
 import com.alibaba.excel.write.handler.SheetWriteHandler;
 import com.alibaba.excel.write.handler.WorkbookWriteHandler;
 import com.alibaba.excel.write.handler.WriteHandler;
+import com.alibaba.excel.write.handler.chain.CellHandlerExecutionChain;
+import com.alibaba.excel.write.handler.chain.RowHandlerExecutionChain;
+import com.alibaba.excel.write.handler.chain.SheetHandlerExecutionChain;
+import com.alibaba.excel.write.handler.chain.WorkbookHandlerExecutionChain;
+import com.alibaba.excel.write.handler.context.CellWriteHandlerContext;
 import com.alibaba.excel.write.merge.LoopMergeStrategy;
 import com.alibaba.excel.write.merge.OnceAbsoluteMergeStrategy;
 import com.alibaba.excel.write.metadata.WriteBasicParameter;
-import com.alibaba.excel.write.metadata.WriteSheet;
-import com.alibaba.excel.write.metadata.WriteTable;
 import com.alibaba.excel.write.metadata.style.WriteCellStyle;
-import com.alibaba.excel.write.metadata.style.WriteFont;
 import com.alibaba.excel.write.property.ExcelWriteHeadProperty;
 import com.alibaba.excel.write.style.AbstractVerticalCellStyleStrategy;
-import com.alibaba.excel.write.style.HorizontalCellStyleStrategy;
 import com.alibaba.excel.write.style.column.AbstractHeadColumnWidthStyleStrategy;
 import com.alibaba.excel.write.style.row.SimpleRowHeightStyleStrategy;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.apache.commons.collections4.CollectionUtils;
 
 /**
  * Write holder configuration
  *
  * @author Jiaju Zhuang
  */
+@Getter
+@Setter
+@EqualsAndHashCode
+@NoArgsConstructor
 public abstract class AbstractWriteHolder extends AbstractHolder implements WriteHolder {
     /**
      * Need Head
@@ -64,15 +70,6 @@ public abstract class AbstractWriteHolder extends AbstractHolder implements Writ
      */
     private ExcelWriteHeadProperty excelWriteHeadProperty;
     /**
-     * Write handler
-     */
-    private Map<Class<? extends WriteHandler>, List<WriteHandler>> writeHandlerMap;
-    /**
-     * Own write handler.Created in the sheet in the workbook interceptors will not be executed because the workbook to
-     * create an event long past. So when initializing sheet, supplementary workbook event.
-     */
-    private Map<Class<? extends WriteHandler>, List<WriteHandler>> ownWriteHandlerMap;
-    /**
      * Use the default style.Default is true.
      */
     private Boolean useDefaultStyle;
@@ -80,6 +77,7 @@ public abstract class AbstractWriteHolder extends AbstractHolder implements Writ
      * Whether to automatically merge headers.Default is true.
      */
     private Boolean automaticMergeHead;
+
     /**
      * Ignore the custom columns.
      */
@@ -87,7 +85,7 @@ public abstract class AbstractWriteHolder extends AbstractHolder implements Writ
     /**
      * Ignore the custom columns.
      */
-    private Collection<String> excludeColumnFiledNames;
+    private Collection<String> excludeColumnFieldNames;
     /**
      * Only output the custom columns.
      */
@@ -95,21 +93,47 @@ public abstract class AbstractWriteHolder extends AbstractHolder implements Writ
     /**
      * Only output the custom columns.
      */
-    private Collection<String> includeColumnFiledNames;
+    private Collection<String> includeColumnFieldNames;
 
-    public AbstractWriteHolder(WriteBasicParameter writeBasicParameter, AbstractWriteHolder parentAbstractWriteHolder,
-        Boolean convertAllFiled) {
+    /**
+     * Write handler
+     */
+    private List<WriteHandler> writeHandlerList;
+
+    /**
+     * Execute the workbook handler chain
+     * Created in the sheet in the workbook interceptors will not be executed because the workbook to
+     * create an event long past. So when initializing sheet, supplementary workbook event.
+     */
+    public WorkbookHandlerExecutionChain ownWorkbookHandlerExecutionChain;
+    /**
+     * Execute the sheet handler chain
+     * Created in the sheet in the workbook interceptors will not be executed because the workbook to
+     * create an event long past. So when initializing sheet, supplementary workbook event.
+     */
+    public SheetHandlerExecutionChain ownSheetHandlerExecutionChain;
+
+    /**
+     * Execute the workbook handler chain
+     */
+    public WorkbookHandlerExecutionChain workbookHandlerExecutionChain;
+    /**
+     * Execute the sheet handler chain
+     */
+    public SheetHandlerExecutionChain sheetHandlerExecutionChain;
+
+    /**
+     * Execute the row handler chain
+     */
+    public RowHandlerExecutionChain rowHandlerExecutionChain;
+
+    /**
+     * Execute the cell handler chain
+     */
+    public CellHandlerExecutionChain cellHandlerExecutionChain;
+
+    public AbstractWriteHolder(WriteBasicParameter writeBasicParameter, AbstractWriteHolder parentAbstractWriteHolder) {
         super(writeBasicParameter, parentAbstractWriteHolder);
-        if (writeBasicParameter.getUse1904windowing() == null) {
-            if (parentAbstractWriteHolder == null) {
-                getGlobalConfiguration().setUse1904windowing(Boolean.FALSE);
-            } else {
-                getGlobalConfiguration()
-                    .setUse1904windowing(parentAbstractWriteHolder.getGlobalConfiguration().getUse1904windowing());
-            }
-        } else {
-            getGlobalConfiguration().setUse1904windowing(writeBasicParameter.getUse1904windowing());
-        }
 
         if (writeBasicParameter.getUseScientificFormat() != null) {
             throw new UnsupportedOperationException("Currently does not support setting useScientificFormat.");
@@ -155,20 +179,20 @@ public abstract class AbstractWriteHolder extends AbstractHolder implements Writ
             this.automaticMergeHead = writeBasicParameter.getAutomaticMergeHead();
         }
 
-        if (writeBasicParameter.getExcludeColumnFiledNames() == null && parentAbstractWriteHolder != null) {
-            this.excludeColumnFiledNames = parentAbstractWriteHolder.getExcludeColumnFiledNames();
+        if (writeBasicParameter.getExcludeColumnFieldNames() == null && parentAbstractWriteHolder != null) {
+            this.excludeColumnFieldNames = parentAbstractWriteHolder.getExcludeColumnFieldNames();
         } else {
-            this.excludeColumnFiledNames = writeBasicParameter.getExcludeColumnFiledNames();
+            this.excludeColumnFieldNames = writeBasicParameter.getExcludeColumnFieldNames();
         }
         if (writeBasicParameter.getExcludeColumnIndexes() == null && parentAbstractWriteHolder != null) {
             this.excludeColumnIndexes = parentAbstractWriteHolder.getExcludeColumnIndexes();
         } else {
             this.excludeColumnIndexes = writeBasicParameter.getExcludeColumnIndexes();
         }
-        if (writeBasicParameter.getIncludeColumnFiledNames() == null && parentAbstractWriteHolder != null) {
-            this.includeColumnFiledNames = parentAbstractWriteHolder.getIncludeColumnFiledNames();
+        if (writeBasicParameter.getIncludeColumnFieldNames() == null && parentAbstractWriteHolder != null) {
+            this.includeColumnFieldNames = parentAbstractWriteHolder.getIncludeColumnFieldNames();
         } else {
-            this.includeColumnFiledNames = writeBasicParameter.getIncludeColumnFiledNames();
+            this.includeColumnFieldNames = writeBasicParameter.getIncludeColumnFieldNames();
         }
         if (writeBasicParameter.getIncludeColumnIndexes() == null && parentAbstractWriteHolder != null) {
             this.includeColumnIndexes = parentAbstractWriteHolder.getIncludeColumnIndexes();
@@ -177,13 +201,25 @@ public abstract class AbstractWriteHolder extends AbstractHolder implements Writ
         }
 
         // Initialization property
-        this.excelWriteHeadProperty = new ExcelWriteHeadProperty(this, getClazz(), getHead(), convertAllFiled);
+        this.excelWriteHeadProperty = new ExcelWriteHeadProperty(this, getClazz(), getHead());
 
-        // Compatible with old code
-        compatibleOldCode(writeBasicParameter);
+        // Set converterMap
+        if (parentAbstractWriteHolder == null) {
+            setConverterMap(DefaultConverterLoader.loadDefaultWriteConverter());
+        } else {
+            setConverterMap(new HashMap<>(parentAbstractWriteHolder.getConverterMap()));
+        }
+        if (writeBasicParameter.getCustomConverterList() != null
+            && !writeBasicParameter.getCustomConverterList().isEmpty()) {
+            for (Converter<?> converter : writeBasicParameter.getCustomConverterList()) {
+                getConverterMap().put(ConverterKeyBuild.buildKey(converter.supportJavaTypeKey()), converter);
+            }
+        }
+    }
 
+    protected void initHandler(WriteBasicParameter writeBasicParameter, AbstractWriteHolder parentAbstractWriteHolder) {
         // Set writeHandlerMap
-        List<WriteHandler> handlerList = new ArrayList<WriteHandler>();
+        List<WriteHandler> handlerList = new ArrayList<>();
 
         // Initialization Annotation
         initAnnotationConfig(handlerList, writeBasicParameter);
@@ -192,101 +228,19 @@ public abstract class AbstractWriteHolder extends AbstractHolder implements Writ
             && !writeBasicParameter.getCustomWriteHandlerList().isEmpty()) {
             handlerList.addAll(writeBasicParameter.getCustomWriteHandlerList());
         }
+        sortAndClearUpHandler(handlerList, true);
 
-        this.ownWriteHandlerMap = sortAndClearUpHandler(handlerList);
-
-        Map<Class<? extends WriteHandler>, List<WriteHandler>> parentWriteHandlerMap = null;
         if (parentAbstractWriteHolder != null) {
-            parentWriteHandlerMap = parentAbstractWriteHolder.getWriteHandlerMap();
+            if (CollectionUtils.isNotEmpty(parentAbstractWriteHolder.getWriteHandlerList())) {
+                handlerList.addAll(parentAbstractWriteHolder.getWriteHandlerList());
+            }
         } else {
-            handlerList.addAll(DefaultWriteHandlerLoader.loadDefaultHandler(useDefaultStyle));
-        }
-        this.writeHandlerMap = sortAndClearUpAllHandler(handlerList, parentWriteHandlerMap);
-
-        // Set converterMap
-        if (parentAbstractWriteHolder == null) {
-            setConverterMap(DefaultConverterLoader.loadDefaultWriteConverter());
-        } else {
-            setConverterMap(new HashMap<String, Converter>(parentAbstractWriteHolder.getConverterMap()));
-        }
-        if (writeBasicParameter.getCustomConverterList() != null
-            && !writeBasicParameter.getCustomConverterList().isEmpty()) {
-            for (Converter converter : writeBasicParameter.getCustomConverterList()) {
-                getConverterMap().put(ConverterKeyBuild.buildKey(converter.supportJavaTypeKey()), converter);
+            if (this instanceof WriteWorkbookHolder) {
+                handlerList.addAll(DefaultWriteHandlerLoader.loadDefaultHandler(useDefaultStyle,
+                    ((WriteWorkbookHolder)this).getExcelType()));
             }
         }
-    }
-
-    /**
-     * Compatible with old code
-     */
-    @Deprecated
-    private void compatibleOldCode(WriteBasicParameter writeBasicParameter) {
-        switch (holderType()) {
-            case SHEET:
-                compatibleOldCodeCreateRowCellStyleStrategy(writeBasicParameter,
-                    ((WriteSheet) writeBasicParameter).getTableStyle());
-                compatibleOldCodeCreateHeadColumnWidthStyleStrategy(writeBasicParameter,
-                    ((WriteSheet) writeBasicParameter).getColumnWidthMap());
-                return;
-            case TABLE:
-                compatibleOldCodeCreateRowCellStyleStrategy(writeBasicParameter,
-                    ((WriteTable) writeBasicParameter).getTableStyle());
-                return;
-            default:
-        }
-    }
-
-    @Deprecated
-    private void compatibleOldCodeCreateRowCellStyleStrategy(WriteBasicParameter writeBasicParameter,
-        TableStyle tableStyle) {
-        if (tableStyle == null) {
-            return;
-        }
-        if (writeBasicParameter.getCustomWriteHandlerList() == null) {
-            writeBasicParameter.setCustomWriteHandlerList(new ArrayList<WriteHandler>());
-        }
-        writeBasicParameter.getCustomWriteHandlerList()
-            .add(new HorizontalCellStyleStrategy(
-                buildWriteCellStyle(tableStyle.getTableHeadFont(), tableStyle.getTableHeadBackGroundColor()),
-                buildWriteCellStyle(tableStyle.getTableContentFont(), tableStyle.getTableContentBackGroundColor())));
-    }
-
-    @Deprecated
-    private WriteCellStyle buildWriteCellStyle(Font font, IndexedColors indexedColors) {
-        WriteCellStyle writeCellStyle = new WriteCellStyle();
-        if (indexedColors != null) {
-            writeCellStyle.setFillPatternType(FillPatternType.SOLID_FOREGROUND);
-            writeCellStyle.setFillForegroundColor(indexedColors.getIndex());
-        }
-        if (font != null) {
-            WriteFont writeFont = new WriteFont();
-            writeFont.setFontName(font.getFontName());
-            writeFont.setFontHeightInPoints(font.getFontHeightInPoints());
-            writeFont.setBold(font.isBold());
-            writeCellStyle.setWriteFont(writeFont);
-        }
-        return writeCellStyle;
-    }
-
-    @Deprecated
-    private void compatibleOldCodeCreateHeadColumnWidthStyleStrategy(WriteBasicParameter writeBasicParameter,
-        final Map<Integer, Integer> columnWidthMap) {
-        if (columnWidthMap == null || columnWidthMap.isEmpty()) {
-            return;
-        }
-        if (writeBasicParameter.getCustomWriteHandlerList() == null) {
-            writeBasicParameter.setCustomWriteHandlerList(new ArrayList<WriteHandler>());
-        }
-        writeBasicParameter.getCustomWriteHandlerList().add(new AbstractHeadColumnWidthStyleStrategy() {
-            @Override
-            protected Integer columnWidth(Head head, Integer columnIndex) {
-                if (columnWidthMap.containsKey(head.getColumnIndex())) {
-                    return columnWidthMap.get(head.getColumnIndex()) / 256;
-                }
-                return 20;
-            }
-        });
+        sortAndClearUpHandler(handlerList, false);
     }
 
     protected void initAnnotationConfig(List<WriteHandler> handlerList, WriteBasicParameter writeBasicParameter) {
@@ -298,15 +252,10 @@ public abstract class AbstractWriteHolder extends AbstractHolder implements Writ
         }
         Map<Integer, Head> headMap = getExcelWriteHeadProperty().getHeadMap();
         boolean hasColumnWidth = false;
-        boolean hasStyle = false;
 
         for (Head head : headMap.values()) {
             if (head.getColumnWidthProperty() != null) {
                 hasColumnWidth = true;
-            }
-            if (head.getHeadStyleProperty() != null || head.getHeadFontProperty() != null
-                || head.getContentStyleProperty() != null || head.getContentFontProperty() != null) {
-                hasStyle = true;
             }
             dealLoopMerge(handlerList, head);
         }
@@ -315,10 +264,7 @@ public abstract class AbstractWriteHolder extends AbstractHolder implements Writ
             dealColumnWidth(handlerList);
         }
 
-        if (hasStyle) {
-            dealStyle(handlerList);
-        }
-
+        dealStyle(handlerList);
         dealRowHigh(handlerList);
         dealOnceAbsoluteMerge(handlerList);
     }
@@ -326,13 +272,24 @@ public abstract class AbstractWriteHolder extends AbstractHolder implements Writ
     private void dealStyle(List<WriteHandler> handlerList) {
         WriteHandler styleStrategy = new AbstractVerticalCellStyleStrategy() {
             @Override
-            protected WriteCellStyle headCellStyle(Head head) {
+            public int order() {
+                return OrderConstant.ANNOTATION_DEFINE_STYLE;
+            }
+
+            @Override
+            protected WriteCellStyle headCellStyle(CellWriteHandlerContext context) {
+                Head head = context.getHeadData();
+                if (head == null) {
+                    return null;
+                }
                 return WriteCellStyle.build(head.getHeadStyleProperty(), head.getHeadFontProperty());
             }
 
             @Override
-            protected WriteCellStyle contentCellStyle(Head head) {
-                return WriteCellStyle.build(head.getContentStyleProperty(), head.getContentFontProperty());
+            protected WriteCellStyle contentCellStyle(CellWriteHandlerContext context) {
+                ExcelContentProperty excelContentProperty = context.getExcelContentProperty();
+                return WriteCellStyle.build(excelContentProperty.getContentStyleProperty(),
+                    excelContentProperty.getContentFontProperty());
             }
         };
         handlerList.add(styleStrategy);
@@ -388,43 +345,26 @@ public abstract class AbstractWriteHolder extends AbstractHolder implements Writ
         handlerList.add(columnWidthStyleStrategy);
     }
 
-
-    protected Map<Class<? extends WriteHandler>, List<WriteHandler>> sortAndClearUpAllHandler(
-        List<WriteHandler> handlerList, Map<Class<? extends WriteHandler>, List<WriteHandler>> parentHandlerMap) {
-        // add
-        if (parentHandlerMap != null) {
-            List<WriteHandler> parentWriteHandler = parentHandlerMap.get(WriteHandler.class);
-            if (!CollectionUtils.isEmpty(parentWriteHandler)) {
-                handlerList.addAll(parentWriteHandler);
-            }
-        }
-        return sortAndClearUpHandler(handlerList);
-    }
-
-    protected Map<Class<? extends WriteHandler>, List<WriteHandler>> sortAndClearUpHandler(
-        List<WriteHandler> handlerList) {
+    protected void sortAndClearUpHandler(List<WriteHandler> handlerList, boolean runOwn) {
         // sort
-        Map<Integer, List<WriteHandler>> orderExcelWriteHandlerMap = new TreeMap<Integer, List<WriteHandler>>();
+        Map<Integer, List<WriteHandler>> orderExcelWriteHandlerMap = new TreeMap<>();
         for (WriteHandler handler : handlerList) {
-            int order = Integer.MIN_VALUE;
-            if (handler instanceof Order) {
-                order = ((Order) handler).order();
-            }
+            int order = handler.order();
             if (orderExcelWriteHandlerMap.containsKey(order)) {
                 orderExcelWriteHandlerMap.get(order).add(handler);
             } else {
-                List<WriteHandler> tempHandlerList = new ArrayList<WriteHandler>();
+                List<WriteHandler> tempHandlerList = new ArrayList<>();
                 tempHandlerList.add(handler);
                 orderExcelWriteHandlerMap.put(order, tempHandlerList);
             }
         }
         // clean up
-        Set<String> alreadyExistedHandlerSet = new HashSet<String>();
-        List<WriteHandler> cleanUpHandlerList = new ArrayList<WriteHandler>();
+        Set<String> alreadyExistedHandlerSet = new HashSet<>();
+        List<WriteHandler> cleanUpHandlerList = new ArrayList<>();
         for (Map.Entry<Integer, List<WriteHandler>> entry : orderExcelWriteHandlerMap.entrySet()) {
             for (WriteHandler handler : entry.getValue()) {
                 if (handler instanceof NotRepeatExecutor) {
-                    String uniqueValue = ((NotRepeatExecutor) handler).uniqueValue();
+                    String uniqueValue = ((NotRepeatExecutor)handler).uniqueValue();
                     if (alreadyExistedHandlerSet.contains(uniqueValue)) {
                         continue;
                     }
@@ -433,39 +373,79 @@ public abstract class AbstractWriteHolder extends AbstractHolder implements Writ
                 cleanUpHandlerList.add(handler);
             }
         }
-        // classify
-        Map<Class<? extends WriteHandler>, List<WriteHandler>> result =
-            new HashMap<Class<? extends WriteHandler>, List<WriteHandler>>(16);
-        result.put(WriteHandler.class, new ArrayList<WriteHandler>());
-        result.put(WorkbookWriteHandler.class, new ArrayList<WriteHandler>());
-        result.put(SheetWriteHandler.class, new ArrayList<WriteHandler>());
-        result.put(RowWriteHandler.class, new ArrayList<WriteHandler>());
-        result.put(CellWriteHandler.class, new ArrayList<WriteHandler>());
-        for (WriteHandler writeHandler : cleanUpHandlerList) {
-            if (writeHandler instanceof CellWriteHandler) {
-                result.get(CellWriteHandler.class).add(writeHandler);
-            }
-            if (writeHandler instanceof RowWriteHandler) {
-                result.get(RowWriteHandler.class).add(writeHandler);
-            }
-            if (writeHandler instanceof SheetWriteHandler) {
-                result.get(SheetWriteHandler.class).add(writeHandler);
-            }
-            if (writeHandler instanceof WorkbookWriteHandler) {
-                result.get(WorkbookWriteHandler.class).add(writeHandler);
-            }
-            result.get(WriteHandler.class).add(writeHandler);
+
+        // build chain
+        if (!runOwn) {
+            this.writeHandlerList = new ArrayList<>();
         }
-        return result;
+        for (WriteHandler writeHandler : cleanUpHandlerList) {
+            buildChain(writeHandler, runOwn);
+        }
+    }
+
+    protected void buildChain(WriteHandler writeHandler, boolean runOwn) {
+        if (writeHandler instanceof CellWriteHandler) {
+            if (!runOwn) {
+                if (cellHandlerExecutionChain == null) {
+                    cellHandlerExecutionChain = new CellHandlerExecutionChain((CellWriteHandler)writeHandler);
+                } else {
+                    cellHandlerExecutionChain.addLast((CellWriteHandler)writeHandler);
+                }
+            }
+        }
+        if (writeHandler instanceof RowWriteHandler) {
+            if (!runOwn) {
+                if (rowHandlerExecutionChain == null) {
+                    rowHandlerExecutionChain = new RowHandlerExecutionChain((RowWriteHandler)writeHandler);
+                } else {
+                    rowHandlerExecutionChain.addLast((RowWriteHandler)writeHandler);
+                }
+            }
+        }
+        if (writeHandler instanceof SheetWriteHandler) {
+            if (!runOwn) {
+                if (sheetHandlerExecutionChain == null) {
+                    sheetHandlerExecutionChain = new SheetHandlerExecutionChain((SheetWriteHandler)writeHandler);
+                } else {
+                    sheetHandlerExecutionChain.addLast((SheetWriteHandler)writeHandler);
+                }
+            } else {
+                if (ownSheetHandlerExecutionChain == null) {
+                    ownSheetHandlerExecutionChain = new SheetHandlerExecutionChain((SheetWriteHandler)writeHandler);
+                } else {
+                    ownSheetHandlerExecutionChain.addLast((SheetWriteHandler)writeHandler);
+                }
+            }
+        }
+        if (writeHandler instanceof WorkbookWriteHandler) {
+            if (!runOwn) {
+                if (workbookHandlerExecutionChain == null) {
+                    workbookHandlerExecutionChain = new WorkbookHandlerExecutionChain(
+                        (WorkbookWriteHandler)writeHandler);
+                } else {
+                    workbookHandlerExecutionChain.addLast((WorkbookWriteHandler)writeHandler);
+                }
+            } else {
+                if (ownWorkbookHandlerExecutionChain == null) {
+                    ownWorkbookHandlerExecutionChain = new WorkbookHandlerExecutionChain(
+                        (WorkbookWriteHandler)writeHandler);
+                } else {
+                    ownWorkbookHandlerExecutionChain.addLast((WorkbookWriteHandler)writeHandler);
+                }
+            }
+        }
+        if (!runOwn) {
+            this.writeHandlerList.add(writeHandler);
+        }
     }
 
     @Override
     public boolean ignore(String fieldName, Integer columnIndex) {
         if (fieldName != null) {
-            if (includeColumnFiledNames != null && !includeColumnFiledNames.contains(fieldName)) {
+            if (includeColumnFieldNames != null && !includeColumnFieldNames.contains(fieldName)) {
                 return true;
             }
-            if (excludeColumnFiledNames != null && excludeColumnFiledNames.contains(fieldName)) {
+            if (excludeColumnFieldNames != null && excludeColumnFieldNames.contains(fieldName)) {
                 return true;
             }
         }
@@ -480,108 +460,9 @@ public abstract class AbstractWriteHolder extends AbstractHolder implements Writ
         return false;
     }
 
-    public Boolean getNeedHead() {
-        return needHead;
-    }
-
-    public void setNeedHead(Boolean needHead) {
-        this.needHead = needHead;
-    }
-
-    public Map<Class<? extends WriteHandler>, List<WriteHandler>> getWriteHandlerMap() {
-        return writeHandlerMap;
-    }
-
-    public void setWriteHandlerMap(Map<Class<? extends WriteHandler>, List<WriteHandler>> writeHandlerMap) {
-        this.writeHandlerMap = writeHandlerMap;
-    }
-
-    public Map<Class<? extends WriteHandler>, List<WriteHandler>> getOwnWriteHandlerMap() {
-        return ownWriteHandlerMap;
-    }
-
-    public void setOwnWriteHandlerMap(
-        Map<Class<? extends WriteHandler>, List<WriteHandler>> ownWriteHandlerMap) {
-        this.ownWriteHandlerMap = ownWriteHandlerMap;
-    }
-
-    public ExcelWriteHeadProperty getExcelWriteHeadProperty() {
-        return excelWriteHeadProperty;
-    }
-
-    public void setExcelWriteHeadProperty(ExcelWriteHeadProperty excelWriteHeadProperty) {
-        this.excelWriteHeadProperty = excelWriteHeadProperty;
-    }
-
-    public Integer getRelativeHeadRowIndex() {
-        return relativeHeadRowIndex;
-    }
-
-    public void setRelativeHeadRowIndex(Integer relativeHeadRowIndex) {
-        this.relativeHeadRowIndex = relativeHeadRowIndex;
-    }
-
-    public Boolean getUseDefaultStyle() {
-        return useDefaultStyle;
-    }
-
-    public void setUseDefaultStyle(Boolean useDefaultStyle) {
-        this.useDefaultStyle = useDefaultStyle;
-    }
-
-    public Boolean getAutomaticMergeHead() {
-        return automaticMergeHead;
-    }
-
-    public void setAutomaticMergeHead(Boolean automaticMergeHead) {
-        this.automaticMergeHead = automaticMergeHead;
-    }
-
-    public Collection<Integer> getExcludeColumnIndexes() {
-        return excludeColumnIndexes;
-    }
-
-    public void setExcludeColumnIndexes(Collection<Integer> excludeColumnIndexes) {
-        this.excludeColumnIndexes = excludeColumnIndexes;
-    }
-
-    public Collection<String> getExcludeColumnFiledNames() {
-        return excludeColumnFiledNames;
-    }
-
-    public void setExcludeColumnFiledNames(Collection<String> excludeColumnFiledNames) {
-        this.excludeColumnFiledNames = excludeColumnFiledNames;
-    }
-
-    public Collection<Integer> getIncludeColumnIndexes() {
-        return includeColumnIndexes;
-    }
-
-    public void setIncludeColumnIndexes(Collection<Integer> includeColumnIndexes) {
-        this.includeColumnIndexes = includeColumnIndexes;
-    }
-
-    public Collection<String> getIncludeColumnFiledNames() {
-        return includeColumnFiledNames;
-    }
-
-    public void setIncludeColumnFiledNames(Collection<String> includeColumnFiledNames) {
-        this.includeColumnFiledNames = includeColumnFiledNames;
-    }
-
     @Override
     public ExcelWriteHeadProperty excelWriteHeadProperty() {
         return getExcelWriteHeadProperty();
-    }
-
-    @Override
-    public Map<Class<? extends WriteHandler>, List<WriteHandler>> writeHandlerMap() {
-        return getWriteHandlerMap();
-    }
-
-    @Override
-    public Map<Class<? extends WriteHandler>, List<WriteHandler>> ownWriteHandlerMap() {
-        return getOwnWriteHandlerMap();
     }
 
     @Override
@@ -598,4 +479,5 @@ public abstract class AbstractWriteHolder extends AbstractHolder implements Writ
     public boolean automaticMergeHead() {
         return getAutomaticMergeHead();
     }
+
 }

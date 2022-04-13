@@ -3,11 +3,18 @@ package com.alibaba.excel.write.metadata.holder;
 import com.alibaba.excel.enums.HolderEnum;
 import com.alibaba.excel.write.metadata.WriteTable;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * sheet holder
  *
  * @author Jiaju Zhuang
  */
+@Getter
+@Setter
+@EqualsAndHashCode
 public class WriteTableHolder extends AbstractWriteHolder {
     /***
      * poi sheet
@@ -22,36 +29,14 @@ public class WriteTableHolder extends AbstractWriteHolder {
      */
     private WriteTable writeTable;
 
-    public WriteTableHolder(WriteTable writeTable, WriteSheetHolder writeSheetHolder,
-        WriteWorkbookHolder writeWorkbookHolder) {
-        super(writeTable, writeSheetHolder, writeWorkbookHolder.getWriteWorkbook().getConvertAllFiled());
+    public WriteTableHolder(WriteTable writeTable, WriteSheetHolder writeSheetHolder) {
+        super(writeTable, writeSheetHolder);
         this.parentWriteSheetHolder = writeSheetHolder;
         this.tableNo = writeTable.getTableNo();
         this.writeTable = writeTable;
-    }
 
-    public WriteSheetHolder getParentWriteSheetHolder() {
-        return parentWriteSheetHolder;
-    }
-
-    public void setParentWriteSheetHolder(WriteSheetHolder parentWriteSheetHolder) {
-        this.parentWriteSheetHolder = parentWriteSheetHolder;
-    }
-
-    public Integer getTableNo() {
-        return tableNo;
-    }
-
-    public void setTableNo(Integer tableNo) {
-        this.tableNo = tableNo;
-    }
-
-    public WriteTable getWriteTable() {
-        return writeTable;
-    }
-
-    public void setWriteTable(WriteTable writeTable) {
-        this.writeTable = writeTable;
+        // init handler
+        initHandler(writeTable, writeSheetHolder);
     }
 
     @Override

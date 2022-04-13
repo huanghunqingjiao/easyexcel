@@ -1,18 +1,22 @@
 package com.alibaba.easyexcel.test.temp.simple;
 
-import com.alibaba.excel.annotation.write.style.ContentStyle;
+import java.util.Date;
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * write data
  *
  * @author Jiaju Zhuang
  **/
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode
 public class WriteData {
 //    @ContentStyle(locked = true)
-    private float f;
+    private Date dd;
 //    @ContentStyle(locked = false)
     private float f1;
 }

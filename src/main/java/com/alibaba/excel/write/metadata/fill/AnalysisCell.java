@@ -4,11 +4,18 @@ import java.util.List;
 
 import com.alibaba.excel.enums.WriteTemplateAnalysisCellTypeEnum;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * Read the cells of the template while populating the data.
  *
  * @author Jiaju Zhuang
  **/
+@Getter
+@Setter
+@EqualsAndHashCode
 public class AnalysisCell {
     private int columnIndex;
     private int rowIndex;
@@ -18,70 +25,6 @@ public class AnalysisCell {
     private WriteTemplateAnalysisCellTypeEnum cellType;
     private String prefix;
     private Boolean firstRow;
-
-    public int getColumnIndex() {
-        return columnIndex;
-    }
-
-    public void setColumnIndex(int columnIndex) {
-        this.columnIndex = columnIndex;
-    }
-
-    public int getRowIndex() {
-        return rowIndex;
-    }
-
-    public void setRowIndex(int rowIndex) {
-        this.rowIndex = rowIndex;
-    }
-
-    public List<String> getVariableList() {
-        return variableList;
-    }
-
-    public void setVariableList(List<String> variableList) {
-        this.variableList = variableList;
-    }
-
-    public List<String> getPrepareDataList() {
-        return prepareDataList;
-    }
-
-    public void setPrepareDataList(List<String> prepareDataList) {
-        this.prepareDataList = prepareDataList;
-    }
-
-    public Boolean getOnlyOneVariable() {
-        return onlyOneVariable;
-    }
-
-    public void setOnlyOneVariable(Boolean onlyOneVariable) {
-        this.onlyOneVariable = onlyOneVariable;
-    }
-
-    public String getPrefix() {
-        return prefix;
-    }
-
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
-    }
-
-    public WriteTemplateAnalysisCellTypeEnum getCellType() {
-        return cellType;
-    }
-
-    public void setCellType(WriteTemplateAnalysisCellTypeEnum cellType) {
-        this.cellType = cellType;
-    }
-
-    public Boolean getFirstRow() {
-        return firstRow;
-    }
-
-    public void setFirstRow(Boolean firstRow) {
-        this.firstRow = firstRow;
-    }
 
     @Override
     public boolean equals(Object o) {

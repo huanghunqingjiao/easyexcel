@@ -1,14 +1,21 @@
 package com.alibaba.excel.exception;
 
-import com.alibaba.excel.metadata.CellData;
+import com.alibaba.excel.metadata.data.CellData;
 import com.alibaba.excel.metadata.property.ExcelContentProperty;
 import com.alibaba.excel.write.builder.ExcelWriterBuilder;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Data convert exception
  *
  * @author Jiaju Zhuang
  */
+@Getter
+@Setter
+@EqualsAndHashCode
 public class ExcelDataConvertException extends RuntimeException {
     /**
      * NotNull.
@@ -21,7 +28,7 @@ public class ExcelDataConvertException extends RuntimeException {
     /**
      * NotNull.
      */
-    private CellData cellData;
+    private CellData<?> cellData;
     /**
      * Nullable.Only when the header is configured and when the class header is used is not null.
      *
@@ -29,7 +36,7 @@ public class ExcelDataConvertException extends RuntimeException {
      */
     private ExcelContentProperty excelContentProperty;
 
-    public ExcelDataConvertException(Integer rowIndex, Integer columnIndex, CellData cellData,
+    public ExcelDataConvertException(Integer rowIndex, Integer columnIndex, CellData<?> cellData,
         ExcelContentProperty excelContentProperty, String message) {
         super(message);
         this.rowIndex = rowIndex;
@@ -38,7 +45,7 @@ public class ExcelDataConvertException extends RuntimeException {
         this.excelContentProperty = excelContentProperty;
     }
 
-    public ExcelDataConvertException(Integer rowIndex, Integer columnIndex, CellData cellData,
+    public ExcelDataConvertException(Integer rowIndex, Integer columnIndex, CellData<?> cellData,
         ExcelContentProperty excelContentProperty, String message, Throwable cause) {
         super(message, cause);
         this.rowIndex = rowIndex;
@@ -47,35 +54,4 @@ public class ExcelDataConvertException extends RuntimeException {
         this.excelContentProperty = excelContentProperty;
     }
 
-    public Integer getRowIndex() {
-        return rowIndex;
-    }
-
-    public void setRowIndex(Integer rowIndex) {
-        this.rowIndex = rowIndex;
-    }
-
-    public Integer getColumnIndex() {
-        return columnIndex;
-    }
-
-    public void setColumnIndex(Integer columnIndex) {
-        this.columnIndex = columnIndex;
-    }
-
-    public ExcelContentProperty getExcelContentProperty() {
-        return excelContentProperty;
-    }
-
-    public void setExcelContentProperty(ExcelContentProperty excelContentProperty) {
-        this.excelContentProperty = excelContentProperty;
-    }
-
-    public CellData getCellData() {
-        return cellData;
-    }
-
-    public void setCellData(CellData cellData) {
-        this.cellData = cellData;
-    }
 }

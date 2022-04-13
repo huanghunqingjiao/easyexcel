@@ -1,27 +1,29 @@
 package com.alibaba.easyexcel.test.demo.fill;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.junit.Ignore;
-import org.junit.Test;
 
 import com.alibaba.easyexcel.test.util.TestFileUtil;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.enums.WriteDirectionEnum;
+import com.alibaba.excel.util.ListUtils;
+import com.alibaba.excel.util.MapUtils;
 import com.alibaba.excel.write.metadata.WriteSheet;
 import com.alibaba.excel.write.metadata.fill.FillConfig;
 import com.alibaba.excel.write.metadata.fill.FillWrapper;
 
+import org.junit.Ignore;
+import org.junit.Test;
+
 /**
  * 写的填充写法
  *
- * @since 2.1.1
  * @author Jiaju Zhuang
+ * @since 2.1.1
  */
 @Ignore
 public class FillTest {
@@ -47,7 +49,7 @@ public class FillTest {
         // 方案2 根据Map填充
         fileName = TestFileUtil.getPath() + "simpleFill" + System.currentTimeMillis() + ".xlsx";
         // 这里 会填充到第一个sheet， 然后文件流会自动关闭
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = MapUtils.newHashMap();
         map.put("name", "张三");
         map.put("number", 5.2);
         EasyExcel.write(fileName).withTemplate(templateFileName).sheet().doFill(map);
@@ -70,7 +72,18 @@ public class FillTest {
         // 这里 会填充到第一个sheet， 然后文件流会自动关闭
         EasyExcel.write(fileName).withTemplate(templateFileName).sheet().doFill(data());
 
-        // 方案2 分多次 填充 会使用文件缓存（省内存）
+        // 方案2 分多次 填充 会使用文件缓存（省内存） jdk8
+        // since: 3.0.0-beta1
+        fileName = TestFileUtil.getPath() + "listFill" + System.currentTimeMillis() + ".xlsx";
+        EasyExcel.write(fileName)
+            .withTemplate(templateFileName)
+            .sheet()
+            .doFill(() -> {
+                // 分页查询数据
+                return data();
+            });
+
+        // 方案3 分多次 填充 会使用文件缓存（省内存）
         fileName = TestFileUtil.getPath() + "listFill" + System.currentTimeMillis() + ".xlsx";
         ExcelWriter excelWriter = EasyExcel.write(fileName).withTemplate(templateFileName).build();
         WriteSheet writeSheet = EasyExcel.writerSheet().build();
@@ -102,7 +115,7 @@ public class FillTest {
         FillConfig fillConfig = FillConfig.builder().forceNewRow(Boolean.TRUE).build();
         excelWriter.fill(data(), fillConfig, writeSheet);
         excelWriter.fill(data(), fillConfig, writeSheet);
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = MapUtils.newHashMap();
         map.put("date", "2019年10月9日13:28:28");
         map.put("total", 1000);
         excelWriter.fill(map, writeSheet);
@@ -138,8 +151,8 @@ public class FillTest {
 
         // list 后面还有个统计 想办法手动写入
         // 这里偷懒直接用list 也可以用对象
-        List<List<String>> totalListList = new ArrayList<List<String>>();
-        List<String> totalList = new ArrayList<String>();
+        List<List<String>> totalListList = ListUtils.newArrayList();
+        List<String> totalList = ListUtils.newArrayList();
         totalListList.add(totalList);
         totalList.add(null);
         totalList.add(null);
@@ -205,7 +218,9 @@ public class FillTest {
         excelWriter.fill(new FillWrapper("data3", data()), writeSheet);
 
         Map<String, Object> map = new HashMap<String, Object>();
-        map.put("date", "2019年10月9日13:28:28");
+        //map.put("date", "2019年10月9日13:28:28");
+        map.put("date", new Date());
+
         excelWriter.fill(map, writeSheet);
 
         // 别忘记关闭流
@@ -213,12 +228,13 @@ public class FillTest {
     }
 
     private List<FillData> data() {
-        List<FillData> list = new ArrayList<FillData>();
+        List<FillData> list = ListUtils.newArrayList();
         for (int i = 0; i < 10; i++) {
             FillData fillData = new FillData();
             list.add(fillData);
             fillData.setName("张三");
             fillData.setNumber(5.2);
+            fillData.setDate(new Date());
         }
         return list;
     }
