@@ -24,6 +24,7 @@ public class DemoData {
     private Date date;
     @ExcelProperty("数字标题")
     private Double doubleData;
+
     /**
      * 忽略这个字段
      */

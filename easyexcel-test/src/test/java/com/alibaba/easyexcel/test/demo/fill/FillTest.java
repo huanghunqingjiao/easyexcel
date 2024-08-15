@@ -16,8 +16,7 @@ import com.alibaba.excel.write.metadata.WriteSheet;
 import com.alibaba.excel.write.metadata.fill.FillConfig;
 import com.alibaba.excel.write.metadata.fill.FillWrapper;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * 写的填充写法
@@ -25,7 +24,7 @@ import org.junit.Test;
  * @author Jiaju Zhuang
  * @since 2.1.1
  */
-@Ignore
+
 public class FillTest {
     /**
      * 最简单的填充
@@ -64,6 +63,7 @@ public class FillTest {
     public void listFill() {
         // 模板注意 用{} 来表示你要用的变量 如果本来就有"{","}" 特殊字符 用"\{","\}"代替
         // 填充list 的时候还要注意 模板中{.} 多了个点 表示list
+        // 如果填充list的对象是map,必须包涵所有list的key,哪怕数据为null，必须使用map.put(key,null)
         String templateFileName =
             TestFileUtil.getPath() + "demo" + File.separator + "fill" + File.separator + "list.xlsx";
 
@@ -72,18 +72,7 @@ public class FillTest {
         // 这里 会填充到第一个sheet， 然后文件流会自动关闭
         EasyExcel.write(fileName).withTemplate(templateFileName).sheet().doFill(data());
 
-        // 方案2 分多次 填充 会使用文件缓存（省内存） jdk8
-        // since: 3.0.0-beta1
-        fileName = TestFileUtil.getPath() + "listFill" + System.currentTimeMillis() + ".xlsx";
-        EasyExcel.write(fileName)
-            .withTemplate(templateFileName)
-            .sheet()
-            .doFill(() -> {
-                // 分页查询数据
-                return data();
-            });
-
-        // 方案3 分多次 填充 会使用文件缓存（省内存）
+        // 方案2 分多次 填充 会使用文件缓存（省内存）
         fileName = TestFileUtil.getPath() + "listFill" + System.currentTimeMillis() + ".xlsx";
         try (ExcelWriter excelWriter = EasyExcel.write(fileName).withTemplate(templateFileName).build()) {
             WriteSheet writeSheet = EasyExcel.writerSheet().build();

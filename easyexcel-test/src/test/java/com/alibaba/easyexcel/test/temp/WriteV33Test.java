@@ -1,5 +1,8 @@
 package com.alibaba.easyexcel.test.temp;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -16,8 +19,7 @@ import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +28,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Jiaju Zhuang
  **/
-@Ignore
+
 public class WriteV33Test {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WriteV33Test.class);
@@ -134,6 +136,13 @@ public class WriteV33Test {
             list.add(data);
         }
         return list;
+    }
+
+
+    @Test
+    public void test4() throws Exception{
+       Path path= Files.createTempFile(new File("/Users/zhuangjiaju/test/test0422/test/xx").toPath(),System.currentTimeMillis()+"",".jpg");
+        System.out.println(path);
     }
 
 }

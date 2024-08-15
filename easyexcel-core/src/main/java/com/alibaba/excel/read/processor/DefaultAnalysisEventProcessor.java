@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.alibaba.excel.context.AnalysisContext;
+import com.alibaba.excel.enums.CellDataTypeEnum;
 import com.alibaba.excel.enums.HeadKindEnum;
 import com.alibaba.excel.enums.RowTypeEnum;
 import com.alibaba.excel.exception.ExcelAnalysisException;
@@ -13,10 +14,13 @@ import com.alibaba.excel.metadata.Head;
 import com.alibaba.excel.metadata.data.ReadCellData;
 import com.alibaba.excel.read.listener.ReadListener;
 import com.alibaba.excel.read.metadata.holder.ReadRowHolder;
+import com.alibaba.excel.read.metadata.holder.ReadSheetHolder;
 import com.alibaba.excel.read.metadata.property.ExcelReadHeadProperty;
+import com.alibaba.excel.util.BooleanUtils;
 import com.alibaba.excel.util.ConverterUtils;
 import com.alibaba.excel.util.StringUtils;
 
+import org.apache.commons.collections4.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +52,12 @@ public class DefaultAnalysisEventProcessor implements AnalysisEventProcessor {
 
     @Override
     public void endSheet(AnalysisContext analysisContext) {
+        ReadSheetHolder readSheetHolder = analysisContext.readSheetHolder();
+        if (BooleanUtils.isTrue(readSheetHolder.getEnded())) {
+            return;
+        }
+        readSheetHolder.setEnded(Boolean.TRUE);
+
         for (ReadListener readListener : analysisContext.currentReadHolder().readListenerList()) {
             readListener.doAfterAllAnalysed(analysisContext);
         }
@@ -111,6 +121,14 @@ public class DefaultAnalysisEventProcessor implements AnalysisEventProcessor {
     }
 
     private void buildHead(AnalysisContext analysisContext, Map<Integer, ReadCellData<?>> cellDataMap) {
+        // Rule out empty head, and then take the largest column
+        if (MapUtils.isNotEmpty(cellDataMap)) {
+            cellDataMap.entrySet()
+                .stream()
+                .filter(entry -> CellDataTypeEnum.EMPTY != entry.getValue().getType())
+                .forEach(entry -> analysisContext.readSheetHolder().setMaxNotEmptyDataHeadSize(entry.getKey()));
+        }
+
         if (!HeadKindEnum.CLASS.equals(analysisContext.currentReadHolder().excelReadHeadProperty().getHeadKind())) {
             return;
         }

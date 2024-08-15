@@ -8,20 +8,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.alibaba.easyexcel.test.util.TestFileUtil;
+import com.alibaba.easyexcel.test.util.TestUtil;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.metadata.data.WriteCellData;
-import com.alibaba.excel.util.DateUtils;
 import com.alibaba.excel.util.FileUtils;
 
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 /**
  * @author Jiaju Zhuang
  */
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class ConverterDataTest {
 
     private static File file07;
@@ -30,7 +30,7 @@ public class ConverterDataTest {
     private static File fileImage07;
     private static File fileImage03;
 
-    @BeforeClass
+    @BeforeAll
     public static void init() {
         file07 = TestFileUtil.createNewFile("converter07.xlsx");
         file03 = TestFileUtil.createNewFile("converter03.xls");
@@ -112,8 +112,9 @@ public class ConverterDataTest {
     private List<ConverterWriteData> data() throws Exception {
         List<ConverterWriteData> list = new ArrayList<ConverterWriteData>();
         ConverterWriteData converterWriteData = new ConverterWriteData();
-        converterWriteData.setDate(DateUtils.parseDate("2020-01-01 01:01:01"));
-        converterWriteData.setLocalDateTime(DateUtils.parseLocalDateTime("2020-01-01 01:01:01", null, null));
+        converterWriteData.setDate(TestUtil.TEST_DATE);
+        converterWriteData.setLocalDate(TestUtil.TEST_LOCAL_DATE);
+        converterWriteData.setLocalDateTime(TestUtil.TEST_LOCAL_DATE_TIME);
         converterWriteData.setBooleanData(Boolean.TRUE);
         converterWriteData.setBigDecimal(BigDecimal.ONE);
         converterWriteData.setBigInteger(BigInteger.ONE);

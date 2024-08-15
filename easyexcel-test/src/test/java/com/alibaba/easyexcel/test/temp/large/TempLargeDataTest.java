@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import com.alibaba.easyexcel.test.core.large.LargeDataTest;
 import com.alibaba.easyexcel.test.util.TestFileUtil;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.ExcelWriter;
@@ -19,20 +18,19 @@ import org.apache.poi.xssf.streaming.SXSSFCell;
 import org.apache.poi.xssf.streaming.SXSSFRow;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * @author Jiaju Zhuang
  */
-@Ignore
+
 public class TempLargeDataTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LargeDataTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TempLargeDataTest.class);
     private int i = 0;
 
     private static File fileFill07;
@@ -42,7 +40,7 @@ public class TempLargeDataTest {
     private static File fileWriteTemp07;
     private static File fileWritePoi07;
 
-    @BeforeClass
+    @BeforeAll
     public static void init() {
         fileFill07 = TestFileUtil.createNewFile("largefill07.xlsx");
         fileWrite07 = TestFileUtil.createNewFile("large" + File.separator + "fileWrite07.xlsx");
@@ -124,7 +122,7 @@ public class TempLargeDataTest {
         long costPoi = System.currentTimeMillis() - start;
         LOGGER.info("poi write cost:{}", System.currentTimeMillis() - start);
         LOGGER.info("{} vs {}", cost, costPoi);
-        Assert.assertTrue(costPoi * 2 > cost);
+        Assertions.assertTrue(costPoi * 2 > cost);
     }
 
     @Test
@@ -167,9 +165,9 @@ public class TempLargeDataTest {
                     for (int j = 0; j < 25; j++) {
                         String str = "str-" + j + "-" + i;
                         //if (i + 10000 == j) {
-                            SXSSFCell cell = row.createCell(j);
-                            cell.setCellValue(str);
-                            //System.out.println(str);
+                        SXSSFCell cell = row.createCell(j);
+                        cell.setCellValue(str);
+                        //System.out.println(str);
                         //}
                     }
                     if (i % 5000 == 0) {

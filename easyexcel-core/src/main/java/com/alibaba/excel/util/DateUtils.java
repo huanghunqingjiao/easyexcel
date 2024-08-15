@@ -1,15 +1,21 @@
 package com.alibaba.excel.util;
 
+import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
+
+import org.apache.poi.ss.usermodel.DateUtil;
 
 /**
  * Date utils
@@ -55,6 +61,8 @@ public class DateUtils {
 
     public static String defaultDateFormat = DATE_FORMAT_19;
 
+    public static String defaultLocalDateFormat = DATE_FORMAT_10;
+
     private DateUtils() {}
 
     /**
@@ -88,6 +96,25 @@ public class DateUtils {
             return LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern(dateFormat));
         } else {
             return LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern(dateFormat, local));
+        }
+    }
+
+    /**
+     * convert string to date
+     *
+     * @param dateString
+     * @param dateFormat
+     * @param local
+     * @return
+     */
+    public static LocalDate parseLocalDate(String dateString, String dateFormat, Locale local) {
+        if (StringUtils.isEmpty(dateFormat)) {
+            dateFormat = switchDateFormat(dateString);
+        }
+        if (local == null) {
+            return LocalDate.parse(dateString, DateTimeFormatter.ofPattern(dateFormat));
+        } else {
+            return LocalDate.parse(dateString, DateTimeFormatter.ofPattern(dateFormat, local));
         }
     }
 
@@ -184,6 +211,65 @@ public class DateUtils {
         }
     }
 
+    /**
+     * Format date
+     *
+     * @param date
+     * @param dateFormat
+     * @return
+     */
+    public static String format(LocalDate date, String dateFormat) {
+        return format(date, dateFormat, null);
+    }
+
+    /**
+     * Format date
+     *
+     * @param date
+     * @param dateFormat
+     * @return
+     */
+    public static String format(LocalDate date, String dateFormat, Locale local) {
+        if (date == null) {
+            return null;
+        }
+        if (StringUtils.isEmpty(dateFormat)) {
+            dateFormat = defaultLocalDateFormat;
+        }
+        if (local == null) {
+            return date.format(DateTimeFormatter.ofPattern(dateFormat));
+        } else {
+            return date.format(DateTimeFormatter.ofPattern(dateFormat, local));
+        }
+    }
+
+    /**
+     * Format date
+     *
+     * @param date
+     * @param dateFormat
+     * @return
+     */
+    public static String format(LocalDateTime date, String dateFormat) {
+        return format(date, dateFormat, null);
+    }
+
+    /**
+     * Format date
+     *
+     * @param date
+     * @param dateFormat
+     * @return
+     */
+    public static String format(BigDecimal date, Boolean use1904windowing, String dateFormat) {
+        if (date == null) {
+            return null;
+        }
+        LocalDateTime localDateTime = DateUtil.getLocalDateTime(date.doubleValue(),
+            BooleanUtils.isTrue(use1904windowing), true);
+        return format(localDateTime, dateFormat);
+    }
+
     private static DateFormat getCacheDateFormat(String dateFormat) {
         Map<String, SimpleDateFormat> dateFormatMap = DATE_FORMAT_THREAD_LOCAL.get();
         if (dateFormatMap == null) {
@@ -198,6 +284,65 @@ public class DateUtils {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormat);
         dateFormatMap.put(dateFormat, simpleDateFormat);
         return simpleDateFormat;
+    }
+
+    /**
+     * Given an Excel date with either 1900 or 1904 date windowing,
+     * converts it to a java.util.Date.
+     *
+     * Excel Dates and Times are stored without any timezone
+     * information. If you know (through other means) that your file
+     * uses a different TimeZone to the system default, you can use
+     * this version of the getJavaDate() method to handle it.
+     *
+     * @param date             The Excel date.
+     * @param use1904windowing true if date uses 1904 windowing,
+     *                         or false if using 1900 date windowing.
+     * @return Java representation of the date, or null if date is not a valid Excel date
+     */
+    public static Date getJavaDate(double date, boolean use1904windowing) {
+        //To calculate the Date, in the use of `org.apache.poi.ss.usermodel.DateUtil.getJavaDate(double, boolean,
+        // java.util.TimeZone, boolean), Date when similar `2023-01-01 00:00:00.500`, returns the`2023-01-01
+        // 00:00:01`, but excel in fact shows the `2023-01-01 00:00:00`.
+        // `org.apache.poi.ss.usermodel.DateUtil.getLocalDateTime(double, boolean, boolean)` There is no problem.
+        return Date.from(getLocalDateTime(date, use1904windowing).atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+    /**
+     * Given an Excel date with either 1900 or 1904 date windowing,
+     * converts it to a java.time.LocalDateTime.
+     *
+     * Excel Dates and Times are stored without any timezone
+     * information. If you know (through other means) that your file
+     * uses a different TimeZone to the system default, you can use
+     * this version of the getJavaDate() method to handle it.
+     *
+     * @param date             The Excel date.
+     * @param use1904windowing true if date uses 1904 windowing,
+     *                         or false if using 1900 date windowing.
+     * @return Java representation of the date, or null if date is not a valid Excel date
+     */
+    public static LocalDateTime getLocalDateTime(double date, boolean use1904windowing) {
+        return DateUtil.getLocalDateTime(date, use1904windowing, true);
+    }
+
+    /**
+     * Given an Excel date with either 1900 or 1904 date windowing,
+     * converts it to a java.time.LocalDate.
+     *
+     * Excel Dates and Times are stored without any timezone
+     * information. If you know (through other means) that your file
+     * uses a different TimeZone to the system default, you can use
+     * this version of the getJavaDate() method to handle it.
+     *
+     * @param date             The Excel date.
+     * @param use1904windowing true if date uses 1904 windowing,
+     *                         or false if using 1900 date windowing.
+     * @return Java representation of the date, or null if date is not a valid Excel date
+     */
+    public static LocalDate getLocalDate(double date, boolean use1904windowing) {
+        LocalDateTime localDateTime = getLocalDateTime(date, use1904windowing);
+        return localDateTime == null ? null : localDateTime.toLocalDate();
     }
 
     /**
@@ -325,31 +470,10 @@ public class DateUtils {
             case 0x14:
             case 0x15:
             case 0x16:
-                // 27-36
-            case 0x1b:
-            case 0x1c:
-            case 0x1d:
-            case 0x1e:
-            case 0x1f:
-            case 0x20:
-            case 0x21:
-            case 0x22:
-            case 0x23:
-            case 0x24:
-                // 45-47
+            // 45-47
             case 0x2d:
             case 0x2e:
             case 0x2f:
-                // 50-58
-            case 0x32:
-            case 0x33:
-            case 0x34:
-            case 0x35:
-            case 0x36:
-            case 0x37:
-            case 0x38:
-            case 0x39:
-            case 0x3a:
                 return true;
         }
         return false;

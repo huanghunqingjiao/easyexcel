@@ -10,13 +10,13 @@ import com.alibaba.excel.util.DateUtils;
 import com.alibaba.excel.util.WorkBookUtil;
 
 /**
- * Date and date converter
+ * LocalDateTime and date converter
  *
  * @author Jiaju Zhuang
  */
 public class LocalDateTimeDateConverter implements Converter<LocalDateTime> {
     @Override
-    public Class<LocalDateTime> supportJavaTypeKey() {
+    public Class<?> supportJavaTypeKey() {
         return LocalDateTime.class;
     }
 

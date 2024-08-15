@@ -16,19 +16,19 @@ import com.alibaba.excel.enums.CellExtraTypeEnum;
 import com.alibaba.excel.read.listener.PageReadListener;
 import com.alibaba.excel.read.listener.ReadListener;
 import com.alibaba.excel.read.metadata.ReadSheet;
+import com.alibaba.excel.read.metadata.holder.csv.CsvReadWorkbookHolder;
 import com.alibaba.excel.util.ListUtils;
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * 读的常见写法
  *
  * @author Jiaju Zhuang
  */
-@Ignore
+
 @Slf4j
 public class ReadTest {
 
@@ -47,7 +47,8 @@ public class ReadTest {
         // since: 3.0.0-beta1
         String fileName = TestFileUtil.getPath() + "demo" + File.separator + "demo.xlsx";
         // 这里 需要指定读用哪个class去读，然后读取第一个sheet 文件流会自动关闭
-        // 这里每次会读取100条数据 然后返回过来 直接调用使用数据就行
+        // 这里默认每次会读取100条数据 然后返回过来 直接调用使用数据就行
+        // 具体需要返回多少行可以在`PageReadListener`的构造函数设置
         EasyExcel.read(fileName, DemoData.class, new PageReadListener<DemoData>(dataList -> {
             for (DemoData demoData : dataList) {
                 log.info("读取到一条数据{}", JSON.toJSONString(demoData));
@@ -308,5 +309,29 @@ public class ReadTest {
         String fileName = TestFileUtil.getPath() + "demo" + File.separator + "demo.xlsx";
         // 这里 只要，然后读取第一个sheet 同步读取会自动finish
         EasyExcel.read(fileName, new NoModelDataListener()).sheet().doRead();
+    }
+
+    /**
+     * 自定义修改csv配置
+     */
+    @Test
+    public void csvFormat() {
+        String fileName = TestFileUtil.getPath() + "demo" + File.separator + "demo.csv";
+        try (ExcelReader excelReader = EasyExcel.read(fileName, DemoData.class, new DemoDataListener()).build()) {
+            // 判断是 csv 文件
+            if (excelReader.analysisContext().readWorkbookHolder() instanceof CsvReadWorkbookHolder) {
+                CsvReadWorkbookHolder csvReadWorkbookHolder = (CsvReadWorkbookHolder)excelReader.analysisContext()
+                    .readWorkbookHolder();
+                // 设置成逗号分隔 当然默认也是逗号分隔
+                // 这里要注意 withDelimiter 会重新生成一个 所以要放回去
+                csvReadWorkbookHolder.setCsvFormat(csvReadWorkbookHolder.getCsvFormat().withDelimiter(','));
+            }
+
+            // 拿到所有 sheet
+            List<ReadSheet> readSheetList = excelReader.excelExecutor().sheetList();
+            // 如果只想读取第一个 咋样传入参数即可
+            //ReadSheet readSheet = EasyExcel.readSheet(0).build();
+            excelReader.read(readSheetList);
+        }
     }
 }

@@ -11,17 +11,15 @@ import java.util.List;
 
 import com.alibaba.easyexcel.test.util.TestFileUtil;
 import com.alibaba.excel.EasyExcel;
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.poi.poifs.filesystem.FileMagic;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-@Ignore
 @Slf4j
 public class CsvReadTest {
 

@@ -13,7 +13,7 @@ import com.alibaba.easyexcel.test.core.dataformat.DateFormatData;
 import com.alibaba.easyexcel.test.temp.Lock2Test;
 import com.alibaba.easyexcel.test.util.TestFileUtil;
 import com.alibaba.excel.EasyExcel;
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
@@ -22,8 +22,7 @@ import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +31,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Jiaju Zhuang
  **/
-@Ignore
+
 public class DataFormatTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(Lock2Test.class);
 

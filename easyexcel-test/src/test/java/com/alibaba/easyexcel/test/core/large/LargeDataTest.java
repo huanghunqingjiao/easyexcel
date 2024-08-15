@@ -14,18 +14,18 @@ import org.apache.poi.xssf.streaming.SXSSFCell;
 import org.apache.poi.xssf.streaming.SXSSFRow;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * @author Jiaju Zhuang
  */
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class LargeDataTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(LargeDataTest.class);
     private static File fileFill07;
@@ -37,7 +37,7 @@ public class LargeDataTest {
 
     private int i = 0;
 
-    @BeforeClass
+    @BeforeAll
     public static void init() {
         fileFill07 = TestFileUtil.createNewFile("largefill07.xlsx");
         fileWrite07 = TestFileUtil.createNewFile("large" + File.separator + "fileWrite07.xlsx");
@@ -125,7 +125,7 @@ public class LargeDataTest {
         long costPoi = System.currentTimeMillis() - start;
         LOGGER.info("poi write cost:{}", System.currentTimeMillis() - start);
         LOGGER.info("{} vs {}", cost, costPoi);
-        Assert.assertTrue(costPoi * 2 > cost);
+        Assertions.assertTrue(costPoi * 2 > cost);
     }
 
     private List<LargeData> data() {

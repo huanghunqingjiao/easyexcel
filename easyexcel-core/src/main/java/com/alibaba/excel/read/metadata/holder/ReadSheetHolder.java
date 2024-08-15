@@ -65,7 +65,12 @@ public class ReadSheetHolder extends AbstractReadHolder {
      * Read the size of the largest head in sheet head data.
      * see https://github.com/alibaba/easyexcel/issues/2014
      */
-    private Integer maxDataHeadSize;
+    private Integer maxNotEmptyDataHeadSize;
+
+    /**
+     * Reading this sheet has ended.
+     */
+    private Boolean ended;
 
     public ReadSheetHolder(ReadSheet readSheet, ReadWorkbookHolder readWorkbookHolder) {
         super(readSheet, readWorkbookHolder);

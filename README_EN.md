@@ -3,6 +3,7 @@ EasyExcel
 [![Build Status](https://github.com/alibaba/easyexcel/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/alibaba/easyexcel/actions/workflows/ci.yml?query=branch%3Amaster)
 [![Maven central](https://maven-badges.herokuapp.com/maven-central/com.alibaba/easyexcel/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.alibaba/easyexcel)
 [![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+[![](https://img.shields.io/badge/EasyExcel-Check%20Your%20Contribution-orange)](https://opensource.alibaba.com/contribution_leaderboard/details?projectValue=easyexcel)
 
 [Communication Group 1 in QQ(Full): 662022184](https://jq.qq.com/?_wv=1027&k=1T21jJxh)  
 [Communication Group 2 in QQ(Full): 1097936804](https://jq.qq.com/?_wv=1027&k=j5zEy6Xl)  
@@ -121,7 +122,7 @@ DEMO：[https://github.com/alibaba/easyexcel/blob/master/src/test/java/com/aliba
      *  1. Create an entity object, refer to{@link DownloadData}. 
      *     Each property of the entity object corresponds to a specific field of Excel
      *  2. Specify the returned properties
-     *  3. Invoke wirte function, then the OutputStream is automatically closed when it ends.
+     *  3. Invoke write function, then the OutputStream is automatically closed when it ends.
      * </p>
      */
     @GetMapping("download")
